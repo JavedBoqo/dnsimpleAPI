@@ -65,15 +65,6 @@ const requestHeaders = {
     'Content-Type'  : 'application/json'
 }
 
-// const DnsDetail = {
-//     record_type :   "A",
-//     name        :   "mytest",
-//     type        :   "A",
-//     content     :   "8.8.8.1",
-//     ttl         :   600,
-//     priority    :   10
-// }
-
 const Options =    {
     url     :   APIUrl,
     headers :   requestHeaders,
@@ -82,14 +73,47 @@ const Options =    {
 
 console.log("Request send to DNSimple API please wait...");
 
-request.post(
-    Options,
-    (err,httpResponse,body) => {
-     if(err)  {
-         console.log(`Error: ${err}`);
-         return;
-     }
-     console.log(`Success: ${body}`);
-    }
-);
+request.get({
+    url     :   APIZone,
+    headers :   requestHeaders
+},
+async (err,resp,body) => {
+    if(err) console.log(err);
+    const Zones = JSON.parse(body);
+    const ZoneList = Zones.data;
+    // console.log(ZoneList);
+   await ZoneList.map(async(zone) => {
+        if(zone.content == DNSIP) {
+            // console.log("ZOne exist");
+            //***** Delete Zone                                 
+            await request({
+                url     : `${APIZone}${zone.id}`,
+                headers : requestHeaders,
+                method  : 'DELETE'
+            }, (err, res, body) => {
+                if(err) {
+                    console.log(`Error: ${err}`);    
+                    return;
+                }
+                console.log(`Previous zone deleted successfully`);
+            });
+        }
+    });
+
+    setTimeout(async()=>{
+        const  _ = await request.post(
+            Options,
+            (err,httpResponse,body) => {
+            if(err)  {
+                console.log(`Error: ${err}`);
+                return;
+            }
+            const Data= JSON.parse(body);
+            console.log('New Zone Added: ',Data);
+            }
+        );
+    },2000);
+    // console.log(_)
+});//*/
+
 
